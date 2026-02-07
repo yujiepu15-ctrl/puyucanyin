@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>椒麦餐饮助手</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --primary: #FF6B35;
+    --primary-dark: #E85A28;
+    --primary-light: #FF8A5C;
+    --primary-glow: rgba(255,107,53,0.12);
+    --success: #10B981;
+    --success-glow: rgba(16,185,129,0.12);
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --danger-glow: rgba(239,68,68,0.1);
+    --info: #3B82F6;
+    --gold: #F59E0B;
+    --bg: #0B0D13;
+    --bg-card: #151821;
+    --bg-card-hover: #1C1F2A;
+    --bg-elevated: #1F222D;
+    --bg-input: #12141B;
+    --border: rgba(255,255,255,0.05);
+    --border-light: rgba(255,255,255,0.08);
+    --border-active: rgba(255,255,255,0.15);
+    --text-primary: #ECEEF2;
+    --text-secondary: #858AA0;
+    --text-muted: #4E5264;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --top-bar-height: 60px;
+    --bottom-nav-height: 68px;
+    --sidebar-width: 232px;
+}
+
+body {
+    font-family: 'DM Sans', 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* ===== Layout ===== */
+.app-shell { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: none; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 0;
+    z-index: 200; padding: 20px 14px;
+}
+.sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-bottom: 28px;
+}
+.sidebar-logo .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--primary), #FF9A5C);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; box-shadow: 0 4px 14px rgba(255,107,53,0.25);
+}
+.sidebar-logo .logo-text {
+    font-size: 17px; font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), #FFB380);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.sidebar-nav { list-style: none; flex: 1; }
+.sidebar-nav li {
+    padding: 11px 14px; border-radius: var(--radius-md);
+    cursor: pointer; color: var(--text-secondary);
+    font-size: 13.5px; font-weight: 500;
+    display: flex; align-items: center; gap: 11px;
+    margin-bottom: 2px; transition: all 0.15s;
+}
+.sidebar-nav li:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.sidebar-nav li.active { background: var(--primary-glow); color: var(--primary); font-weight: 600; }
+.sidebar-nav li i { width: 18px; text-align: center; font-size: 14px; }
+
+/* Main */
+.main-area { flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Top Bar */
+.top-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,13,19,0.88);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px; height: var(--top-bar-height);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.top-bar-left { display: flex; align-items: center; gap: 10px; }
+.mobile-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 17px; font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), #FFB380);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.mobile-logo i { font-size: 18px; }
+.page-title-bar { font-size: 16px; font-weight: 700; display: none; }
+.top-bar-actions { display: flex; gap: 6px; align-items: center; }
+.icon-btn {
+    width: 38px; height: 38px; border: none;
+    background: var(--bg-card); border-radius: 10px;
+    color: var(--text-secondary); font-size: 15px;
+    cursor: pointer; position: relative; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.icon-btn .badge {
+    position: absolute; top: -2px; right: -2px;
+    background: var(--danger); color: white;
+    font-size: 10px; font-weight: 700;
+    min-width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg); padding: 0 3px;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1; padding-bottom: calc(var(--bottom-nav-height) + 16px);
+    overflow-y: auto;
+}
+.module-page { display: none; animation: pageIn 0.3s ease; }
+.module-page.active { display: block; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Shared Components ===== */
+.section-label {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-muted);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+}
+.section-label.danger { color: var(--danger); }
+.section-label .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+
+.page-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.back-btn {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-secondary);
+    padding: 7px 12px; font-size: 13px; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+}
+.back-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.page-header h2 { flex: 1; font-size: 17px; font-weight: 700; }
+.header-btn {
+    background: var(--primary); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 7px 14px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all 0.12s;
+    display: flex; align-items: center; gap: 5px;
+}
+.header-btn:hover { background: var(--primary-dark); }
+.header-btn.secondary {
+    background: var(--bg-elevated); color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+.header-btn.secondary:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+
+.empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px 20px; min-height: 200px; color: var(--text-muted); text-align: center;
+}
+.empty-state i { font-size: 40px; margin-bottom: 14px; opacity: 0.3; }
+.empty-state h3 { font-size: 16px; margin-bottom: 4px; color: var(--text-secondary); }
+.empty-state p { font-size: 13px; }
+
+/* ===== Dashboard ===== */
+.alert-section {
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(239,68,68,0.06) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(239,68,68,0.1);
+}
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-card {
+    background: var(--bg-card); border: 1px solid rgba(239,68,68,0.15);
+    border-radius: var(--radius-md); padding: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: all 0.15s;
+}
+.alert-card:active { transform: scale(0.985); }
+.alert-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.alert-status { font-size: 12px; color: var(--danger); font-weight: 500; }
+.alert-qty { text-align: right; }
+.alert-qty-val { font-size: 28px; font-weight: 700; color: var(--danger); line-height: 1; }
+.alert-qty-unit { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.alert-action-bar { margin-top: 10px; }
+.view-all-link {
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; padding: 10px;
+    background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.12);
+    border-radius: var(--radius-md); color: var(--danger);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.view-all-link:hover { background: rgba(239,68,68,0.12); }
+
+.revenue-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.revenue-card {
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg); padding: 22px; text-align: center;
+    position: relative; overflow: hidden;
+}
+.revenue-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: linear-gradient(90deg, var(--gold), var(--primary), var(--gold));
+}
+.revenue-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.revenue-amount { font-size: 40px; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 10px; font-family: 'DM Sans', sans-serif; }
+.revenue-meta { display: flex; justify-content: center; gap: 16px; font-size: 12px; }
+.revenue-trend { font-weight: 600; }
+.revenue-time { color: var(--text-muted); }
+
+.mall-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.mall-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.mall-badge {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white; padding: 3px 10px; border-radius: 16px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px;
+}
+.mall-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.mall-card {
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-md); padding: 16px 12px;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+}
+.mall-card:hover { background: var(--bg-card-hover); border-color: var(--primary); }
+.mall-card:active { transform: scale(0.97); }
+.mall-icon { font-size: 32px; margin-bottom: 8px; }
+.mall-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.mall-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.mall-rebate {
+    display: inline-block; background: var(--primary-glow); color: var(--primary);
+    padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700;
+}
+
+.quick-section { padding: 16px; }
+.func-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.func-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 6px;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+    position: relative;
+}
+.func-card:hover { background: var(--bg-card-hover); }
+.func-card:active { transform: scale(0.95); }
+.func-card .ficon { font-size: 24px; margin-bottom: 4px; }
+.func-card .fname { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.func-badge {
+    position: absolute; top: 5px; right: 5px;
+    background: var(--primary); color: white;
+    font-size: 8px; font-weight: 700; padding: 1.5px 5px; border-radius: 3px;
+}
+
+/* ===== Inventory ===== */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
+.stat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px;
+}
+.stat-card.warn { border-color: rgba(245,158,11,0.25); }
+.stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 26px; font-weight: 700; margin-top: 3px; font-family: 'DM Sans', sans-serif; }
+.stat-card.warn .stat-value { color: var(--warning); }
+
+.filter-area { padding: 0 16px 14px; }
+.search-input {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text-primary);
+    font-size: 13.5px; font-family: inherit; margin-bottom: 10px;
+}
+.search-input:focus { outline: none; border-color: var(--primary); }
+.search-input::placeholder { color: var(--text-muted); }
+.filter-tabs { display: flex; gap: 6px; }
+.ftab {
+    flex: 1; padding: 7px; border: 1px solid var(--border);
+    background: var(--bg-card); border-radius: var(--radius-sm);
+    color: var(--text-secondary); font-size: 12.5px; font-weight: 600;
+    cursor: pointer; text-align: center; font-family: inherit; transition: all 0.15s;
+}
+.ftab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Card list */
+.inv-list { padding: 0 16px 16px; }
+.inv-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s;
+}
+.inv-item.warning { border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.03); }
+.inv-info { flex: 1; min-width: 0; }
+.inv-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.inv-meta { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-qty { text-align: center; min-width: 52px; }
+.inv-qty-val { font-size: 24px; font-weight: 700; font-family: 'DM Sans', sans-serif; }
+.inv-qty-val.ok { color: var(--success); }
+.inv-qty-val.bad { color: var(--danger); }
+.inv-qty-status { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+
+.inv-actions { display: flex; flex-direction: column; gap: 4px; }
+.inv-action {
+    padding: 6px 10px; background: var(--primary); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: inherit; white-space: nowrap;
+}
+.inv-action:active { background: var(--primary-dark); }
+.inv-action.del {
+    background: transparent; color: var(--text-muted);
+    border: 1px solid var(--border); font-size: 10px;
+}
+.inv-action.del:hover { color: var(--danger); border-color: rgba(239,68,68,0.3); }
+
+/* Desktop table */
+.inv-table-wrap { display: none; padding: 0 16px 16px; }
+.inv-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg-card); border-radius: var(--radius-md);
+    overflow: hidden; border: 1px solid var(--border);
+}
+.inv-table th {
+    padding: 12px 14px; text-align: left;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted);
+    background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+}
+.inv-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.inv-table tr:last-child td { border-bottom: none; }
+.inv-table tr:hover { background: var(--bg-card-hover); }
+.status-tag { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.status-tag.ok { background: var(--success-glow); color: var(--success); }
+.status-tag.low { background: var(--danger-glow); color: var(--danger); }
+.btn-del { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.15s; padding: 4px; }
+.btn-del:hover { color: var(--danger); }
+
+/* ===== History ===== */
+.history-list { padding: 0 16px 16px; }
+.history-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 14px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+}
+.history-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+}
+.history-icon.add { background: var(--success-glow); color: var(--success); }
+.history-icon.del-manual { background: var(--danger-glow); color: var(--danger); }
+.history-icon.del-consume { background: rgba(245,158,11,0.12); color: var(--warning); }
+.history-icon.edit { background: rgba(59,130,246,0.12); color: var(--info); }
+.history-info { flex: 1; min-width: 0; }
+.history-title { font-size: 13.5px; font-weight: 600; margin-bottom: 1px; }
+.history-detail { font-size: 11.5px; color: var(--text-muted); }
+.history-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; text-align: right; }
+.history-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 600; margin-left: 4px;
+}
+.history-tag.manual { background: var(--danger-glow); color: var(--danger); }
+.history-tag.consume { background: rgba(245,158,11,0.12); color: var(--warning); }
+.history-tag.voice { background: var(--primary-glow); color: var(--primary); }
+.history-tag.text { background: rgba(59,130,246,0.12); color: var(--info); }
+
+/* History table (desktop) */
+.history-table-wrap { display: none; padding: 0 16px 16px; }
+.history-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg-card); border-radius: var(--radius-md);
+    overflow: hidden; border: 1px solid var(--border);
+}
+.history-table th {
+    padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+    background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+}
+.history-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.history-table tr:last-child td { border-bottom: none; }
+
+/* ===== Delete Confirmation Modal ===== */
+.delete-modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+    z-index: 600; justify-content: center; align-items: center;
+}
+.delete-modal-overlay.show { display: flex; }
+.delete-modal {
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl); width: 88%; max-width: 380px;
+    padding: 24px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    animation: modalIn 0.25s ease;
+}
+.delete-modal h3 { font-size: 17px; margin-bottom: 6px; }
+.delete-modal p { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; }
+.delete-btns { display: flex; flex-direction: column; gap: 8px; }
+.delete-btn {
+    padding: 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-md); background: var(--bg-elevated);
+    color: var(--text-primary); font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; text-align: left;
+    display: flex; align-items: center; gap: 10px; transition: all 0.15s;
+}
+.delete-btn:hover { background: var(--bg-card-hover); }
+.delete-btn.danger { border-color: rgba(239,68,68,0.25); }
+.delete-btn.danger:hover { background: rgba(239,68,68,0.08); }
+.delete-btn.warn { border-color: rgba(245,158,11,0.25); }
+.delete-btn.warn:hover { background: rgba(245,158,11,0.08); }
+.delete-btn .dicon { font-size: 18px; width: 24px; text-align: center; }
+.delete-btn-cancel {
+    padding: 10px; border: none; background: none;
+    color: var(--text-muted); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit; text-align: center;
+    margin-top: 4px;
+}
+
+/* ===== AI Modal (Redesigned) ===== */
+.modal-overlay {
+    display: none; position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+    z-index: 500; justify-content: center; align-items: flex-end;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-box {
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    width: 100%; max-width: 520px;
+    padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+    animation: slideUp 0.3s ease;
+    max-height: 90vh; overflow-y: auto;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+}
+.modal-header h2 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.modal-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 22px; cursor: pointer; padding: 4px;
+}
+.modal-close:hover { color: var(--text-primary); }
+
+/* Step Indicator */
+.step-indicator {
+    display: flex; gap: 4px; margin-bottom: 16px;
+}
+.step-dot {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: var(--border); transition: background 0.3s;
+}
+.step-dot.active { background: var(--primary); }
+.step-dot.done { background: var(--success); }
+
+/* Step 1: Input */
+.step-section { display: none; }
+.step-section.active { display: block; }
+
+.step-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-secondary); }
+
+.ai-textarea {
+    width: 100%; height: 80px; padding: 12px 14px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text-primary);
+    font-size: 14px; font-family: inherit; resize: none;
+    margin-bottom: 12px;
+}
+.ai-textarea:focus { outline: none; border-color: var(--primary); }
+
+.input-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.voice-toggle-btn {
+    flex: 1; height: 44px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    cursor: pointer; font-family: inherit;
+    display: flex; justify-content: center; align-items: center; gap: 7px;
+    transition: all 0.15s;
+}
+.voice-toggle-btn.recording {
+    background: rgba(239,68,68,0.1);
+    border-color: var(--danger); color: var(--danger);
+    animation: recPulse 1.5s infinite;
+}
+@keyframes recPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+
+.confirm-text-btn {
+    height: 44px; padding: 0 20px;
+    background: var(--primary); color: white;
+    border: none; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; display: flex; align-items: center; gap: 5px;
+    transition: all 0.12s;
+}
+.confirm-text-btn:hover { background: var(--primary-dark); }
+.confirm-text-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Step 2: AI Preview */
+.preview-list { margin-bottom: 14px; }
+.preview-item {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 14px;
+    margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+}
+.preview-item-info { flex: 1; }
+.preview-item-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.preview-item-detail { font-size: 12px; color: var(--text-muted); }
+.preview-item-qty { font-size: 20px; font-weight: 700; color: var(--primary); font-family: 'DM Sans'; }
+.preview-item-remove {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 14px; cursor: pointer; padding: 4px; margin-left: 8px;
+}
+.preview-item-remove:hover { color: var(--danger); }
+
+.preview-actions { display: flex; gap: 8px; }
+.preview-back-btn {
+    flex: 1; height: 44px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    cursor: pointer; font-family: inherit;
+}
+.preview-confirm-btn {
+    flex: 2; height: 44px;
+    background: var(--success); color: white;
+    border: none; border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all 0.12s;
+}
+.preview-confirm-btn:hover { background: #0EA572; }
+
+.modal-status { text-align: center; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); min-height: 16px; }
+
+/* Recording Overlay */
+.recording-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.92); z-index: 9999;
+    justify-content: center; align-items: center; flex-direction: column; color: white;
+}
+.recording-box { text-align: center; }
+.visualizer { display: flex; gap: 5px; justify-content: center; height: 48px; align-items: center; margin-bottom: 20px; }
+.bar { width: 5px; background: var(--primary); border-radius: 3px; animation: bounce 0.5s infinite ease-in-out; }
+.bar:nth-child(2) { animation-delay: 0.1s; height: 28px; }
+.bar:nth-child(3) { animation-delay: 0.2s; height: 38px; }
+.bar:nth-child(4) { animation-delay: 0.1s; height: 28px; }
+.bar:nth-child(1),.bar:nth-child(5) { height: 18px; }
+@keyframes bounce { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(2); } }
+.recording-text { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.recording-hint { color: #777; font-size: 12px; margin-bottom: 20px; }
+.stop-rec-btn {
+    padding: 12px 32px; background: var(--danger); color: white;
+    border: none; border-radius: 24px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; gap: 8px; margin: 0 auto;
+}
+.stop-rec-btn:active { transform: scale(0.95); }
+
+/* Store launch, settings, buy same as before */
+.launch-hero {
+    text-align: center; padding: 28px 16px;
+    background: linear-gradient(180deg, var(--primary-glow) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+}
+.launch-hero h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.launch-hero p { color: var(--text-muted); font-size: 13px; }
+.launch-sections { padding: 16px; }
+.launch-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 14px; overflow: hidden; }
+.launch-block-header { display: flex; align-items: center; gap: 10px; padding: 14px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); }
+.launch-block-header .licon { font-size: 22px; }
+.launch-block-header h4 { font-size: 15px; font-weight: 700; }
+.launch-block-body { padding: 14px; }
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+.form-input { width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px; font-family: inherit; }
+.form-input:focus { outline: none; border-color: var(--primary); }
+.btn-primary-full { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-primary-full:hover { background: var(--primary-dark); }
+.suggestion-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+.suggestion-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 3px; }
+.suggestion-value { font-size: 14px; font-weight: 600; color: var(--primary); }
+.upload-zone { border: 2px dashed var(--border-light); border-radius: var(--radius-md); padding: 24px; text-align: center; cursor: pointer; background: var(--bg-elevated); }
+.upload-zone:hover { border-color: var(--primary); }
+.upload-zone .uicon { font-size: 32px; margin-bottom: 6px; }
+.upload-zone .utext { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.upload-zone .uhint { font-size: 11px; color: var(--text-muted); }
+.checklist-group h5 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+.check-item label { font-size: 13px; cursor: pointer; }
+
+.settings-list { padding: 16px; }
+.settings-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); margin-bottom: 6px; cursor: pointer;
+    font-size: 14px; transition: all 0.15s;
+}
+.settings-item:hover { background: var(--bg-card-hover); }
+.settings-item .arrow { color: var(--text-muted); font-size: 12px; }
+
+.buy-section { padding: 16px; }
+.buy-header { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--warning); }
+.restock-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 6px; }
+.restock-qty { color: var(--danger); font-size: 12px; font-weight: 600; }
+.btn-sm { padding: 5px 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-sm:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ===== Bottom Nav ===== */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: var(--bottom-nav-height);
+    background: rgba(11,13,19,0.92);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text-muted); padding: 5px 0;
+    cursor: pointer; transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent; text-decoration: none;
+}
+.nav-item.active { color: var(--primary); }
+.nav-icon { font-size: 20px; margin-bottom: 2px; }
+.nav-label { font-size: 10px; font-weight: 600; }
+
+/* FAB */
+.fab {
+    position: fixed;
+    bottom: calc(var(--bottom-nav-height) + 12px);
+    right: 16px; width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none; color: white; font-size: 20px;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(255,107,53,0.35);
+    transition: all 0.2s; z-index: 90;
+    display: flex; align-items: center; justify-content: center;
+}
+.fab:active { transform: scale(0.9); }
+
+/* ===== Desktop ===== */
+@media (min-width: 768px) {
+    .sidebar { display: flex; }
+    .main-area { margin-left: var(--sidebar-width); }
+    .mobile-logo { display: none; }
+    .page-title-bar { display: block; }
+    .bottom-nav { display: none; }
+    .fab { bottom: 20px; right: 20px; }
+    .main-content { padding-bottom: 20px; }
+    .mall-grid { grid-template-columns: repeat(4, 1fr); }
+    .stats-row { grid-template-columns: repeat(4, 1fr); }
+    .inv-list { display: none; }
+    .inv-table-wrap { display: block; }
+    .history-list { display: none; }
+    .history-table-wrap { display: block; }
+    .modal-box { border-radius: var(--radius-xl); max-height: 80vh; align-self: center; }
+    .alert-section,.revenue-section,.mall-section,.quick-section { padding: 20px 28px; }
+    .page-header,.filter-area,.inv-table-wrap,.history-table-wrap,.settings-list,.launch-sections,.buy-section,.history-list,.inv-list { padding-left: 28px; padding-right: 28px; }
+}
+@media (max-width: 480px) {
+    .mall-grid { grid-template-columns: 1fr 1fr; }
+    .func-grid { grid-template-columns: repeat(2, 1fr); }
+}
+    </style>
+</head>
+<body>
+
+<!-- Recording Overlay -->
+<div id="recording-overlay" class="recording-overlay">
+    <div class="recording-box">
+        <div class="visualizer">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div>
+        </div>
+        <p class="recording-text">正在聆听...</p>
+        <p class="recording-hint">点击下方按钮结束录音</p>
+        <button class="stop-rec-btn" onclick="stopAndCloseRecording()">
+            <i class="fa-solid fa-stop"></i> 结束录音
+        </button>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="delete-modal-overlay" id="deleteModal">
+    <div class="delete-modal">
+        <h3>删除 <span id="deleteItemName"></span></h3>
+        <p>请选择删除原因，这将记录在操作历史中：</p>
+        <div class="delete-btns">
+            <button class="delete-btn danger" onclick="confirmDelete('manual')">
+                <span class="dicon"><i class="fa-solid fa-trash-can"></i></span>
+                <div><div style="font-size:14px;">手动删除</div><div style="font-size:11px;color:var(--text-muted);font-weight:400;">录入错误 / 人为清除</div></div>
+            </button>
+            <button class="delete-btn warn" onclick="confirmDelete('consume')">
+                <span class="dicon"><i class="fa-solid fa-utensils"></i></span>
+                <div><div style="font-size:14px;">消耗删除</div><div style="font-size:11px;color:var(--text-muted);font-weight:400;">已使用完毕 / 正常消耗</div></div>
+            </button>
+        </div>
+        <button class="delete-btn-cancel" onclick="closeDeleteModal()">取消</button>
+    </div>
+</div>
+
+<!-- AI Modal -->
+<div class="modal-overlay" id="aiModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI 智能录入</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step-dot active" id="stepDot1"></div>
+            <div class="step-dot" id="stepDot2"></div>
+        </div>
+
+        <!-- Step 1: Input -->
+        <div class="step-section active" id="step1">
+            <div class="step-title">第1步 · 输入或语音</div>
+            <textarea class="ai-textarea" id="manual-input" placeholder="输入食材和数量，例如：&#10;土豆50斤，酱油一箱，鸡腿肉30斤"></textarea>
+            <div class="input-actions">
+                <button class="voice-toggle-btn" id="voiceToggleBtn" onclick="toggleRecording()">
+                    <i class="fa-solid fa-microphone"></i> <span>开始录音</span>
+                </button>
+                <button class="confirm-text-btn" id="confirmTextBtn" onclick="submitTextForProcessing()" disabled>
+                    <i class="fa-solid fa-arrow-right"></i> 识别提取
+                </button>
+            </div>
+            <div class="modal-status" id="status-bar">输入文字或点击录音，然后点"识别提取"</div>
+        </div>
+
+        <!-- Step 2: Preview & Confirm -->
+        <div class="step-section" id="step2">
+            <div class="step-title">第2步 · 确认入库</div>
+            <div class="preview-list" id="previewList"></div>
+            <div class="preview-actions">
+                <button class="preview-back-btn" onclick="goBackToStep1()">← 返回修改</button>
+                <button class="preview-confirm-btn" id="confirmStockBtn" onclick="confirmStock()">
+                    <i class="fa-solid fa-check"></i> 确认入库
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- App Shell -->
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon"><i class="fa-solid fa-pepper-hot"></i></div>
+            <span class="logo-text">椒麦助手</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="active" data-target="dashboard"><i class="fa-solid fa-chart-line"></i> 实况大厅</li>
+            <li data-target="inventory"><i class="fa-solid fa-box"></i> 库存管理</li>
+            <li data-target="history"><i class="fa-solid fa-clock-rotate-left"></i> 操作历史</li>
+            <li data-target="store-launch"><i class="fa-solid fa-store"></i> 开店助手</li>
+            <li data-target="buy"><i class="fa-solid fa-cart-shopping"></i> 进货助手</li>
+            <li data-target="menu"><i class="fa-solid fa-utensils"></i> 菜单管理</li>
+            <li data-target="reports"><i class="fa-solid fa-chart-pie"></i> 经营报表</li>
+            <li data-target="settings"><i class="fa-solid fa-gear"></i> 设置</li>
+        </ul>
+    </aside>
+
+    <div class="main-area">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="mobile-logo"><i class="fa-solid fa-pepper-hot"></i> 椒麦助手</div>
+                <div class="page-title-bar" id="pageTitle">实况大厅</div>
+            </div>
+            <div class="top-bar-actions">
+                <button class="icon-btn" onclick="openModal()" title="AI 录入"><i class="fa-solid fa-microphone"></i></button>
+                <button class="icon-btn" id="notificationBtn">
+                    <span class="badge" id="alertBadge">0</span>
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+
+            <!-- Dashboard -->
+            <section id="dashboard" class="module-page active">
+                <div class="alert-section">
+                    <div class="section-label danger"><span class="dot"></span> 库存预警</div>
+                    <div class="alert-list" id="criticalAlerts"></div>
+                    <div class="alert-action-bar">
+                        <a class="view-all-link" onclick="navigateTo('inventory')">查看全部库存 <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="revenue-section">
+                    <div class="section-label"><span class="dot" style="background:var(--gold)"></span> 今日营业</div>
+                    <div class="revenue-card">
+                        <div class="revenue-label">今日营业额</div>
+                        <div class="revenue-amount" id="todayRevenue">¥0</div>
+                        <div class="revenue-meta">
+                            <span class="revenue-trend" id="revenueTrend"></span>
+                            <span class="revenue-time" id="currentTime"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mall-section">
+                    <div class="mall-header">
+                        <div class="section-label" style="margin-bottom:0"><span class="dot" style="background:var(--info)"></span> 供货商商城</div>
+                        <span class="mall-badge">官方直供 · 返利</span>
+                    </div>
+                    <div class="mall-grid" id="supplierMall"></div>
+                </div>
+                <div class="quick-section">
+                    <div class="section-label">快捷功能</div>
+                    <div class="func-grid">
+                        <div class="func-card" onclick="navigateTo('inventory')"><div class="ficon">📦</div><div class="fname">库存</div></div>
+                        <div class="func-card" onclick="navigateTo('history')"><div class="ficon">📜</div><div class="fname">历史记录</div></div>
+                        <div class="func-card" onclick="navigateTo('store-launch')"><div class="ficon">🏢</div><div class="fname">开店助手</div><span class="func-badge">NEW</span></div>
+                        <div class="func-card" onclick="navigateTo('reports')"><div class="ficon">📊</div><div class="fname">报表</div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory -->
+            <section id="inventory" class="module-page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2>库存管理</h2>
+                    <button class="header-btn secondary" onclick="exportInventory()"><i class="fa-solid fa-file-export"></i> 导出</button>
+                    <button class="header-btn" onclick="openModal()"><i class="fa-solid fa-plus"></i> 录入</button>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-label">总库存物品</div><div class="stat-value" id="total-items">0</div></div>
+                    <div class="stat-card warn"><div class="stat-label">库存预警</div><div class="stat-value" id="low-stock-count">0</div></div>
+                </div>
+                <div class="filter-area">
+                    <input type="text" class="search-input" placeholder="搜索物品..." id="inventorySearch">
+                    <div class="filter-tabs">
+                        <button class="ftab active" data-filter="all">全部</button>
+                        <button class="ftab" data-filter="warning">预警</button>
+                        <button class="ftab" data-filter="normal">充足</button>
+                    </div>
+                </div>
+                <div class="inv-list" id="inventoryList"></div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>物品名称</th><th>分类</th><th>当前数量</th><th>供应商</th><th>更新时间</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="inventory-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- History -->
+            <section id="history" class="module-page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2>操作历史</h2>
+                    <button class="header-btn secondary" onclick="exportHistory()"><i class="fa-solid fa-file-export"></i> 导出</button>
+                </div>
+                <div class="history-list" id="historyListMobile"></div>
+                <div class="history-table-wrap">
+                    <table class="history-table">
+                        <thead><tr><th>时间</th><th>操作</th><th>物品</th><th>数量变化</th><th>来源</th><th>备注</th></tr></thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Buy -->
+            <section id="buy" class="module-page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2>进货助手</h2>
+                </div>
+                <div class="buy-section">
+                    <div class="buy-header"><i class="fa-solid fa-triangle-exclamation"></i> 缺货清单</div>
+                    <div id="restock-list"></div>
+                </div>
+            </section>
+
+            <!-- Store Launch -->
+            <section id="store-launch" class="module-page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2>开店助手</h2>
+                </div>
+                <div class="launch-hero"><h3>从想法到开店，一站式辅助</h3><p>专为准备开店的餐饮老板打造</p></div>
+                <div class="launch-sections">
+                    <div class="launch-block">
+                        <div class="launch-block-header"><span class="licon">🍜</span><h4>1. 我想卖什么</h4></div>
+                        <div class="launch-block-body">
+                            <div class="form-group"><label>产品类型</label><input type="text" class="form-input" placeholder="例如: 鸡枞面 / 烧烤" id="productType"></div>
+                            <div class="form-group"><label>目标城市/商圈</label><input type="text" class="form-input" placeholder="例如: 成都春熙路" id="targetLocation"></div>
+                            <button class="btn-primary-full" onclick="analyzeStore()"><i class="fa-solid fa-wand-magic-sparkles"></i> 智能分析</button>
+                        </div>
+                    </div>
+                    <div class="launch-block">
+                        <div class="launch-block-header"><span class="licon">📍</span><h4>2. 选址建议</h4></div>
+                        <div class="launch-block-body" id="storeAnalysis"><div class="empty-state" style="min-height:100px;padding:16px;"><p style="font-size:13px;">请先填写上方信息并点击"智能分析"</p></div></div>
+                    </div>
+                    <div class="launch-block">
+                        <div class="launch-block-header"><span class="licon">🎨</span><h4>3. 装修与设计</h4></div>
+                        <div class="launch-block-body"><div class="upload-zone" onclick="alert('上传功能开发中')"><div class="uicon">📷</div><div class="utext">上传毛坯房照片</div><div class="uhint">支持JPG/PNG，最多9张</div></div></div>
+                    </div>
+                    <div class="launch-block">
+                        <div class="launch-block-header"><span class="licon">📝</span><h4>4. 开店清单</h4></div>
+                        <div class="launch-block-body">
+                            <div class="checklist-group">
+                                <h5>推荐菜品结构</h5>
+                                <div class="check-item"><input type="checkbox" id="ck1"><label for="ck1">主打款设计</label></div>
+                                <div class="check-item"><input type="checkbox" id="ck2"><label for="ck2">利润款搭配</label></div>
+                                <div class="check-item"><input type="checkbox" id="ck3"><label for="ck3">引流款策划</label></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Menu -->
+            <section id="menu" class="module-page">
+                <div class="page-header"><button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button><h2>菜单管理</h2></div>
+                <div class="empty-state"><i class="fa-solid fa-utensils"></i><h3>菜单模块</h3><p>开发中</p></div>
+            </section>
+
+            <!-- Reports -->
+            <section id="reports" class="module-page">
+                <div class="page-header"><button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button><h2>经营报表</h2></div>
+                <div class="empty-state"><i class="fa-solid fa-chart-pie"></i><h3>报表模块</h3><p>开发中</p></div>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings" class="module-page">
+                <div class="page-header"><button class="back-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-arrow-left"></i></button><h2>设置</h2></div>
+                <div class="settings-list">
+                    <div class="settings-item"><span>店铺信息</span><span class="arrow"><i class="fa-solid fa-chevron-right"></i></span></div>
+                    <div class="settings-item"><span>账号管理</span><span class="arrow"><i class="fa-solid fa-chevron-right"></i></span></div>
+                    <div class="settings-item"><span>通知设置</span><span class="arrow"><i class="fa-solid fa-chevron-right"></i></span></div>
+                    <div class="settings-item" onclick="if(confirm('确定清空所有数据？')){localStorage.removeItem('jiaomai_inventory');localStorage.removeItem('jiaomai_history');location.reload();}">
+                        <span style="color:var(--danger);">清空所有数据</span><span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+    <a class="nav-item active" data-target="dashboard"><div class="nav-icon"><i class="fa-solid fa-chart-line"></i></div><div class="nav-label">首页</div></a>
+    <a class="nav-item" data-target="inventory"><div class="nav-icon"><i class="fa-solid fa-box"></i></div><div class="nav-label">库存</div></a>
+    <a class="nav-item" data-target="history"><div class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><div class="nav-label">历史</div></a>
+    <a class="nav-item" data-target="buy"><div class="nav-icon"><i class="fa-solid fa-cart-shopping"></i></div><div class="nav-label">进货</div></a>
+    <a class="nav-item" data-target="settings"><div class="nav-icon"><i class="fa-solid fa-gear"></i></div><div class="nav-label">我的</div></a>
+</nav>
+
+<button class="fab" onclick="openModal()" title="AI 语音录入"><i class="fa-solid fa-microphone"></i></button>
+
+<script>
+// ============================================
+// 椒麦餐饮助手 - 优化融合版
+// ============================================
+
+// --- Config ---
+// ✅ API密钥已安全存储在 Cloudflare Worker 中，前端不再暴露
+// ⬇️ 部署Worker后，把下面的地址改成你自己的Worker地址
+const WORKER_URL = 'https://jiaomai-api.yujiepu15.workers.dev';
+const LOW_THRESHOLD = 10;
+
+// --- Data ---
+let inventory = JSON.parse(localStorage.getItem('jiaomai_inventory')) || [
+    { id: 1, name: "鸡腿肉", category: "生鲜类", quantity: 12, unit: "斤", supplier: "老王冻品", daysLeft: 1.5, lastUpdate: "2026/2/6 10:00" },
+    { id: 2, name: "香菜", category: "生鲜类", quantity: 3, unit: "斤", supplier: "新鲜菜市", daysLeft: 0.5, lastUpdate: "2026/2/6 09:30" },
+    { id: 3, name: "辣椒面", category: "调料类", quantity: 8, unit: "袋", supplier: "川香调味", daysLeft: 1.8, lastUpdate: "2026/2/5 14:00" },
+    { id: 4, name: "辣椒油", category: "调料类", quantity: 45, unit: "瓶", supplier: "川香调味", daysLeft: 15, lastUpdate: "2026/2/4 09:00" },
+    { id: 5, name: "面粉", category: "主食类", quantity: 28, unit: "袋", supplier: "金龙面业", daysLeft: 10, lastUpdate: "2026/2/3 11:00" },
+    { id: 6, name: "食用油", category: "调料类", quantity: 18, unit: "桶", supplier: "金龙油业", daysLeft: 12, lastUpdate: "2026/2/1 08:00" },
+    { id: 7, name: "土豆", category: "生鲜类", quantity: 50, unit: "斤", supplier: "新鲜菜市", daysLeft: 8, lastUpdate: "2026/2/6 10:00" },
+    { id: 8, name: "东古酱油", category: "调料类", quantity: 5, unit: "瓶", supplier: "川香调味", daysLeft: 2, lastUpdate: "2026/2/6 09:30" }
+];
+
+let historyLog = JSON.parse(localStorage.getItem('jiaomai_history')) || [];
+
+const suppliers = [
+    { id: 1, name: '老王冻品', icon: '🍗', description: '鸡肉牛肉专供', rebate: '返利5%' },
+    { id: 2, name: '新鲜菜市', icon: '🥬', description: '当日蔬菜直供', rebate: '返利3%' },
+    { id: 3, name: '川香调味', icon: '🌶️', description: '正宗川味调料', rebate: '返利8%' },
+    { id: 4, name: '金龙面业', icon: '🍜', description: '优质面粉米面', rebate: '返利4%' }
+];
+
+let revenue = { today: 8650, trend: 12 };
+
+// AI processing temp
+let pendingItems = [];
+let currentInputSource = 'text'; // 'text' | 'voice'
+
+// Audio
+window.inventoryAudioCtx = window.inventoryAudioCtx || null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+// Delete state
+let pendingDeleteIndex = -1;
+
+// ========== NAVIGATION ==========
+function navigateTo(pageId) {
+    document.querySelectorAll('.module-page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(pageId);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.toggle('active', n.dataset.target === pageId));
+    document.querySelectorAll('.sidebar-nav li').forEach(n => n.classList.toggle('active', n.dataset.target === pageId));
+    const titles = { dashboard:'实况大厅', inventory:'库存管理', history:'操作历史', 'store-launch':'开店助手', buy:'进货助手', menu:'菜单管理', reports:'经营报表', settings:'设置' };
+    const t = document.getElementById('pageTitle'); if(t) t.textContent = titles[pageId] || '';
+    window.scrollTo(0,0);
+}
+
+// ========== HISTORY LOG ==========
+function getNow() {
+    return new Date().toLocaleString('zh-CN', {hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+function addHistory(action, itemName, qtyChange, unit, source, note) {
+    historyLog.unshift({
+        id: Date.now(),
+        time: getNow(),
+        action, // 'add' | 'delete' | 'merge'
+        itemName,
+        qtyChange, // "+50" or "-12"
+        unit: unit || '',
+        source, // 'voice' | 'text' | 'manual_delete' | 'consume_delete'
+        note: note || ''
+    });
+    localStorage.setItem('jiaomai_history', JSON.stringify(historyLog));
+}
+
+function renderHistory() {
+    // Mobile list
+    const mList = document.getElementById('historyListMobile');
+    if (mList) {
+        if (!historyLog.length) {
+            mList.innerHTML = '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><h3>暂无历史记录</h3><p>录入或删除库存后会自动记录</p></div>';
+        } else {
+            mList.innerHTML = historyLog.map(h => {
+                let iconClass = 'add', icon = 'fa-plus';
+                if (h.source === 'manual_delete') { iconClass = 'del-manual'; icon = 'fa-trash-can'; }
+                else if (h.source === 'consume_delete') { iconClass = 'del-consume'; icon = 'fa-utensils'; }
+                else if (h.action === 'merge') { iconClass = 'edit'; icon = 'fa-rotate'; }
+
+                let tagHtml = '';
+                if (h.source === 'voice') tagHtml = '<span class="history-tag voice">语音</span>';
+                else if (h.source === 'text') tagHtml = '<span class="history-tag text">文字</span>';
+                else if (h.source === 'manual_delete') tagHtml = '<span class="history-tag manual">手动删除</span>';
+                else if (h.source === 'consume_delete') tagHtml = '<span class="history-tag consume">消耗删除</span>';
+
+                return `
+                <div class="history-item">
+                    <div class="history-icon ${iconClass}"><i class="fa-solid ${icon}"></i></div>
+                    <div class="history-info">
+                        <div class="history-title">${h.itemName} ${h.qtyChange}${h.unit} ${tagHtml}</div>
+                        <div class="history-detail">${h.note || h.action}</div>
+                    </div>
+                    <div class="history-time">${h.time.split(' ')[1] || h.time}</div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // Desktop table
+    const tbody = document.getElementById('historyTableBody');
+    if (tbody) {
+        if (!historyLog.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">暂无历史记录</td></tr>';
+        } else {
+            tbody.innerHTML = historyLog.map(h => {
+                let srcLabel = h.source;
+                if (h.source === 'voice') srcLabel = '🎤 语音录入';
+                else if (h.source === 'text') srcLabel = '⌨️ 文字录入';
+                else if (h.source === 'manual_delete') srcLabel = '🗑️ 手动删除';
+                else if (h.source === 'consume_delete') srcLabel = '🍽️ 消耗删除';
+                return `<tr>
+                    <td style="font-size:12px;color:var(--text-muted);">${h.time}</td>
+                    <td>${h.action === 'add' ? '新增' : h.action === 'merge' ? '合并' : '删除'}</td>
+                    <td><strong>${h.itemName}</strong></td>
+                    <td style="font-weight:600;color:${h.qtyChange.startsWith('+') ? 'var(--success)' : 'var(--danger)'};">${h.qtyChange}${h.unit}</td>
+                    <td>${srcLabel}</td>
+                    <td style="color:var(--text-muted);font-size:12px;">${h.note || '-'}</td>
+                </tr>`;
+            }).join('');
+        }
+    }
+}
+
+// ========== EXPORT ==========
+function exportInventory() {
+    const data = inventory.map(i => ({
+        '物品名称': i.name,
+        '分类': i.category || '其他',
+        '数量': i.quantity,
+        '单位': i.unit,
+        '供应商': i.supplier || '-',
+        '状态': i.quantity <= LOW_THRESHOLD ? '⚠️ 预警' : '充足',
+        '更新时间': i.lastUpdate || '-'
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{wch:14},{wch:10},{wch:8},{wch:6},{wch:14},{wch:10},{wch:18}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '库存清单');
+    XLSX.writeFile(wb, `椒麦库存清单_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.xlsx`);
+}
+
+function exportHistory() {
+    if (!historyLog.length) { alert('暂无历史记录可导出'); return; }
+    const data = historyLog.map(h => {
+        let srcLabel = h.source;
+        if (h.source === 'voice') srcLabel = '语音录入';
+        else if (h.source === 'text') srcLabel = '文字录入';
+        else if (h.source === 'manual_delete') srcLabel = '手动删除';
+        else if (h.source === 'consume_delete') srcLabel = '消耗删除';
+        return {
+            '时间': h.time,
+            '操作': h.action === 'add' ? '新增' : h.action === 'merge' ? '合并' : '删除',
+            '物品名称': h.itemName,
+            '数量变化': h.qtyChange + h.unit,
+            '来源': srcLabel,
+            '备注': h.note || '-'
+        };
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{wch:20},{wch:8},{wch:14},{wch:12},{wch:12},{wch:20}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '操作历史');
+    XLSX.writeFile(wb, `椒麦操作历史_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.xlsx`);
+}
+
+// ========== DELETE WITH REASON ==========
+function openDeleteModal(index) {
+    pendingDeleteIndex = index;
+    const item = inventory[index];
+    document.getElementById('deleteItemName').textContent = item ? item.name : '';
+    document.getElementById('deleteModal').classList.add('show');
+}
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+    pendingDeleteIndex = -1;
+}
+function confirmDelete(reason) {
+    if (pendingDeleteIndex < 0) return;
+    const item = inventory[pendingDeleteIndex];
+    if (!item) return;
+    const source = reason === 'manual' ? 'manual_delete' : 'consume_delete';
+    const note = reason === 'manual' ? '手动删除' : '消耗完毕';
+    addHistory('delete', item.name, `-${item.quantity}`, item.unit, source, note);
+    inventory.splice(pendingDeleteIndex, 1);
+    saveAndRender();
+    closeDeleteModal();
+}
+
+// ========== DASHBOARD RENDER ==========
+function renderAlerts() {
+    const c = document.getElementById('criticalAlerts');
+    const warns = inventory.filter(i => i.quantity <= LOW_THRESHOLD);
+    document.getElementById('alertBadge').textContent = warns.length;
+    if (!warns.length) { c.innerHTML = '<div style="text-align:center;padding:14px;color:var(--text-muted);font-size:13px;">暂无库存预警 ✓</div>'; return; }
+    c.innerHTML = warns.map(item => `
+        <div class="alert-card" onclick="navigateTo('inventory')">
+            <div><div class="alert-name">${item.name}</div><div class="alert-status">⚠️ 剩余不足${item.daysLeft||'?'}天</div></div>
+            <div class="alert-qty"><div class="alert-qty-val">${item.quantity}</div><div class="alert-qty-unit">${item.unit}</div></div>
+        </div>`).join('');
+}
+
+function renderRevenue() {
+    const el = document.getElementById('todayRevenue'); if(el) el.textContent = `¥${revenue.today.toLocaleString()}`;
+    const tr = document.getElementById('revenueTrend'); if(tr) { tr.textContent = `较昨日 ↑ ${revenue.trend}%`; tr.style.color = 'var(--success)'; }
+    updateTime();
+}
+function updateTime() { const el = document.getElementById('currentTime'); if(el) el.textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); }
+
+function renderSuppliers() {
+    const c = document.getElementById('supplierMall'); if(!c) return;
+    c.innerHTML = suppliers.map(s => `
+        <div class="mall-card" onclick="alert('正在进入 ${s.name} 商城...\\n${s.description}\\n${s.rebate}')">
+            <div class="mall-icon">${s.icon}</div><div class="mall-name">${s.name}</div>
+            <div class="mall-desc">${s.description}</div><div class="mall-rebate">${s.rebate}</div>
+        </div>`).join('');
+}
+
+// ========== INVENTORY RENDER ==========
+function renderInventory(filter = 'all') {
+    let items = inventory;
+    if (filter === 'warning') items = items.filter(i => i.quantity <= LOW_THRESHOLD);
+    else if (filter === 'normal') items = items.filter(i => i.quantity > LOW_THRESHOLD);
+
+    // Mobile
+    const listEl = document.getElementById('inventoryList');
+    if (listEl) {
+        if (!items.length) { listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">暂无数据</div>'; }
+        else {
+            listEl.innerHTML = items.map((item, idx) => {
+                const realIdx = inventory.indexOf(item);
+                const isLow = item.quantity <= LOW_THRESHOLD;
+                return `
+                <div class="inv-item ${isLow?'warning':''}">
+                    <div class="inv-info"><div class="inv-name">${item.name}</div><div class="inv-meta">${item.category||'其他'} · ${item.supplier||''}</div></div>
+                    <div class="inv-qty"><div class="inv-qty-val ${isLow?'bad':'ok'}">${item.quantity}</div><div class="inv-qty-status">${isLow?'⚠️ 不足':'✓ 充足'}</div></div>
+                    <div class="inv-actions">
+                        <button class="inv-action" onclick="handleAction(${item.id},${isLow})">${isLow?'补货':'详情'}</button>
+                        <button class="inv-action del" onclick="openDeleteModal(${realIdx})"><i class="fa-solid fa-trash-can"></i> 删除</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // Desktop table
+    const tbody = document.getElementById('inventory-table-body');
+    if (tbody) {
+        tbody.innerHTML = items.map(item => {
+            const realIdx = inventory.indexOf(item);
+            const isLow = item.quantity <= LOW_THRESHOLD;
+            return `<tr>
+                <td><strong>${item.name}</strong></td>
+                <td><span style="font-size:11px;border:1px solid var(--border);padding:2px 6px;border-radius:4px;color:var(--text-secondary);">${item.category||'其他'}</span></td>
+                <td style="font-weight:700;">${item.quantity} <span style="font-size:11px;font-weight:400;color:var(--text-muted);">${item.unit}</span></td>
+                <td style="color:var(--text-muted);">${item.supplier||'-'}</td>
+                <td style="color:var(--text-muted);font-size:12px;">${item.lastUpdate||'-'}</td>
+                <td><span class="status-tag ${isLow?'low':'ok'}">${isLow?'⚠️ 缺货':'充足'}</span></td>
+                <td><button class="btn-del" onclick="openDeleteModal(${realIdx})" title="删除"><i class="fa-solid fa-trash-can"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    document.getElementById('total-items').textContent = inventory.length;
+    document.getElementById('low-stock-count').textContent = inventory.filter(i => i.quantity <= LOW_THRESHOLD).length;
+}
+
+function handleAction(id, isLow) {
+    const item = inventory.find(i => i.id === id); if(!item) return;
+    if (isLow) { if(confirm(`确认为【${item.name}】发起补货？`)) alert(`已发送给【${item.supplier||'默认'}】`); }
+    else alert(`${item.name}\n库存: ${item.quantity}${item.unit}\n供应商: ${item.supplier||'-'}\n更新: ${item.lastUpdate||'-'}`);
+}
+
+function renderRestock() {
+    const c = document.getElementById('restock-list'); if(!c) return;
+    const lows = inventory.filter(i => i.quantity <= LOW_THRESHOLD);
+    if (!lows.length) { c.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">库存健康，暂无缺货</div>'; return; }
+    c.innerHTML = lows.map(i => `
+        <div class="restock-item"><div><strong>${i.name}</strong> <span class="restock-qty">剩 ${i.quantity}${i.unit}</span></div>
+        <button class="btn-sm" onclick="alert('补货请求已发送')">补货</button></div>`).join('');
+}
+
+function saveAndRender() {
+    localStorage.setItem('jiaomai_inventory', JSON.stringify(inventory));
+    renderInventory();
+    renderAlerts();
+    renderRestock();
+    renderHistory();
+}
+
+// ========== SEARCH & FILTER ==========
+function setupSearch() {
+    const input = document.getElementById('inventorySearch'); if(!input) return;
+    input.addEventListener('input', e => {
+        const kw = e.target.value.toLowerCase();
+        document.querySelectorAll('.inv-item').forEach(el => { el.style.display = el.querySelector('.inv-name').textContent.toLowerCase().includes(kw) ? 'flex' : 'none'; });
+        document.querySelectorAll('#inventory-table-body tr').forEach(tr => { tr.style.display = (tr.querySelector('td')?.textContent.toLowerCase()||'').includes(kw) ? '' : 'none'; });
+    });
+}
+function setupFilters() {
+    document.querySelectorAll('.ftab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active'); renderInventory(tab.dataset.filter);
+        });
+    });
+}
+
+// ========== AI MODAL FLOW ==========
+function openModal() {
+    document.getElementById('aiModal').classList.add('show');
+    goToStep(1);
+    document.getElementById('manual-input').value = '';
+    updateConfirmBtn();
+}
+function closeModal() {
+    document.getElementById('aiModal').classList.remove('show');
+    if (isRecording) stopRecordingInternal();
+}
+
+// Text input monitoring
+function setupTextInput() {
+    const ta = document.getElementById('manual-input');
+    ta.addEventListener('input', updateConfirmBtn);
+}
+function updateConfirmBtn() {
+    const btn = document.getElementById('confirmTextBtn');
+    btn.disabled = !document.getElementById('manual-input').value.trim();
+}
+
+// Step navigation
+function goToStep(n) {
+    document.getElementById('step1').classList.toggle('active', n === 1);
+    document.getElementById('step2').classList.toggle('active', n === 2);
+    document.getElementById('stepDot1').className = `step-dot ${n === 1 ? 'active' : 'done'}`;
+    document.getElementById('stepDot2').className = `step-dot ${n === 2 ? 'active' : ''}`;
+}
+function goBackToStep1() { goToStep(1); }
+
+// Submit text → AI processing → preview
+async function submitTextForProcessing() {
+    const text = document.getElementById('manual-input').value.trim();
+    if (!text) return;
+    updateStatus('🧠 AI 正在智能提取...');
+    document.getElementById('confirmTextBtn').disabled = true;
+
+    try {
+        const rawItems = await splitLongInventoryText(text);
+        pendingItems = [];
+        for (let itemText of rawItems) {
+            const item = await extractInventoryItem(itemText);
+            if (item && item.name) pendingItems.push(item);
+        }
+        if (!pendingItems.length) { updateStatus('未识别到有效物品，请重新输入'); document.getElementById('confirmTextBtn').disabled = false; return; }
+        renderPreview();
+        goToStep(2);
+        updateStatus('');
+    } catch (e) {
+        console.error(e);
+        updateStatus('AI 处理失败，请重试');
+    }
+    document.getElementById('confirmTextBtn').disabled = false;
+}
+
+function renderPreview() {
+    const c = document.getElementById('previewList');
+    c.innerHTML = pendingItems.map((item, i) => `
+        <div class="preview-item">
+            <div class="preview-item-info">
+                <div class="preview-item-name">${item.name}</div>
+                <div class="preview-item-detail">${item.category||'其他'} · ${item.unit}</div>
+            </div>
+            <div class="preview-item-qty">${item.quantity}${item.unit}</div>
+            <button class="preview-item-remove" onclick="removePendingItem(${i})"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    `).join('');
+}
+function removePendingItem(i) {
+    pendingItems.splice(i, 1);
+    if (!pendingItems.length) { goBackToStep1(); return; }
+    renderPreview();
+}
+
+// Confirm stock
+function confirmStock() {
+    let count = 0;
+    for (let item of pendingItems) {
+        const existing = inventory.find(i => i.name === item.name);
+        const now = getNow();
+        if (existing) {
+            const oldQty = existing.quantity;
+            existing.quantity += item.quantity;
+            existing.lastUpdate = now;
+            if (item.unit !== '个') existing.unit = item.unit;
+            addHistory('merge', item.name, `+${item.quantity}`, item.unit, currentInputSource, `合并入库 (${oldQty}→${existing.quantity})`);
+        } else {
+            inventory.unshift({
+                id: Date.now() + count, name: item.name,
+                category: item.category || '其他',
+                quantity: item.quantity, unit: item.unit,
+                supplier: '待分配', daysLeft: null, lastUpdate: now
+            });
+            addHistory('add', item.name, `+${item.quantity}`, item.unit, currentInputSource, '新增入库');
+        }
+        count++;
+    }
+    saveAndRender();
+    pendingItems = [];
+    closeModal();
+    alert(`成功入库 ${count} 个物品！`);
+}
+
+// ========== VOICE RECORDING (Toggle) ==========
+function toggleRecording() {
+    if (isRecording) {
+        stopRecordingInternal();
+    } else {
+        startRecordingInternal();
+    }
+}
+
+async function startRecordingInternal() {
+    try {
+        if (!window.inventoryAudioCtx) {
+            window.inventoryAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        isRecording = true;
+        currentInputSource = 'voice';
+
+        // Update UI
+        const btn = document.getElementById('voiceToggleBtn');
+        btn.classList.add('recording');
+        btn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>停止录音</span>';
+
+        // Show overlay
+        const overlay = document.getElementById('recording-overlay');
+        overlay.style.display = 'flex';
+        overlay.querySelector('.recording-text').textContent = '正在聆听...';
+
+        updateStatus('🎙️ 录音中...');
+
+        mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+            isRecording = false;
+            // Stop all tracks
+            stream.getTracks().forEach(t => t.stop());
+
+            const overlayText = document.querySelector('.recording-text');
+            if(overlayText) overlayText.textContent = '正在识别...';
+
+            try {
+                const webm = new Blob(audioChunks, {type:'audio/webm'});
+                if(webm.size < 100) throw new Error("录音太短");
+
+                if(window.inventoryAudioCtx.state === 'suspended') await window.inventoryAudioCtx.resume();
+                const ab = await webm.arrayBuffer();
+                const audioBuffer = await window.inventoryAudioCtx.decodeAudioData(ab);
+                const wav = serializeWav(audioBuffer);
+
+                const fd = new FormData();
+                fd.append('file', wav, 'recording.wav');
+                fd.append('model', 'glm-asr-2512');
+                const res = await fetch(WORKER_URL + '/audio', { method:'POST', body: fd });
+                const result = await res.json();
+                const text = result.text || result.result || '';
+
+                document.getElementById('manual-input').value = text;
+                updateConfirmBtn();
+                updateStatus('✅ 语音识别完成，请检查后点击"识别提取"');
+            } catch(e) {
+                console.error(e);
+                updateStatus('识别失败，请重试');
+            }
+
+            document.getElementById('recording-overlay').style.display = 'none';
+            const btn = document.getElementById('voiceToggleBtn');
+            btn.classList.remove('recording');
+            btn.innerHTML = '<i class="fa-solid fa-microphone"></i> <span>开始录音</span>';
+        };
+
+        mediaRecorder.start();
+    } catch(e) {
+        alert("无法访问麦克风，请检查权限设置");
+        isRecording = false;
+    }
+}
+
+function stopRecordingInternal() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+    isRecording = false;
+}
+
+function stopAndCloseRecording() {
+    stopRecordingInternal();
+}
+
+function serializeWav(buffer) {
+    const nc = buffer.numberOfChannels, sr = buffer.sampleRate;
+    const bd = 16, bps = bd/8, ba = nc*bps, br = sr*ba;
+    const ds = buffer.length*ba, bs = 44+ds;
+    const ab = new ArrayBuffer(bs), v = new DataView(ab);
+    const ws = (v,o,s) => { for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
+    ws(v,0,'RIFF'); v.setUint32(4,36+ds,true); ws(v,8,'WAVE');
+    ws(v,12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
+    v.setUint16(22,nc,true); v.setUint32(24,sr,true); v.setUint32(28,br,true);
+    v.setUint16(32,ba,true); v.setUint16(34,bd,true); ws(v,36,'data');
+    v.setUint32(40,ds,true);
+    let off = 44;
+    for(let i=0;i<buffer.length;i++){
+        for(let c=0;c<nc;c++){
+            let s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));
+            v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true); off+=2;
+        }
+    }
+    return new Blob([ab],{type:'audio/wav'});
+}
+
+// ========== AI API ==========
+async function splitLongInventoryText(longText) {
+    if ((longText.match(/斤|两|瓶|袋|箱|盒|支|条|桶|包|个|只/g) || []).length <= 1) return [longText];
+    try {
+        const res = await fetch(WORKER_URL + '/chat', {
+            method:'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ model:'glm-4-flash', messages:[{role:'user', content:`将这段话分割成独立的物品描述，只返回JSON字符串数组：${longText}`}], temperature:0.1 })
+        });
+        const json = await res.json();
+        return JSON.parse(json.choices[0].message.content.match(/\[.*\]/s)[0]);
+    } catch(e) { return longText.split(/[，,、;；\s]+/).filter(Boolean); }
+}
+
+async function extractInventoryItem(text) {
+    try {
+        const res = await fetch(WORKER_URL + '/chat', {
+            method:'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ model:'glm-4-flash', messages:[{role:'user', content:`提取物品信息，修正同音字(如现浇→线椒)，必须返回JSON {"name":"","quantity":0,"unit":"","category":""}：${text}`}], temperature:0.1 })
+        });
+        const json = await res.json();
+        const item = JSON.parse(json.choices[0].message.content.match(/\{.*\}/s)[0]);
+        if(!item.category) item.category = '其他';
+        if(!item.quantity) item.quantity = 1;
+        return item;
+    } catch(e) {
+        return {
+            name: text.replace(/[0-9.]+[斤个瓶袋箱桶包只两]/g,'').trim() || text.trim(),
+            quantity: parseFloat(text.match(/[\d.]+/)?.[0] || 1),
+            unit: text.match(/[斤个瓶袋箱桶包只两]/)?.[0] || '个',
+            category: '其他'
+        };
+    }
+}
+
+// ========== UI HELPERS ==========
+function updateStatus(msg) { const el = document.getElementById('status-bar'); if(el) el.textContent = msg; }
+
+function analyzeStore() {
+    const pt = document.getElementById('productType').value;
+    const tl = document.getElementById('targetLocation').value;
+    if (!pt || !tl) { alert('请先填写产品类型和目标城市/商圈'); return; }
+    document.getElementById('storeAnalysis').innerHTML = `
+        <div class="suggestion-card"><div class="suggestion-label">建议商圈类型</div><div class="suggestion-value">社区商圈 / 写字楼周边</div></div>
+        <div class="suggestion-card"><div class="suggestion-label">建议店铺面积</div><div class="suggestion-value">30-50平方米</div></div>
+        <div class="suggestion-card"><div class="suggestion-label">堂食/外卖比例</div><div class="suggestion-value">建议3:7</div></div>
+        <div class="suggestion-card"><div class="suggestion-label">预计启动资金</div><div class="suggestion-value">15-25万元</div></div>`;
+}
+
+// ========== NAV ==========
+function setupNav() {
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => { n.addEventListener('click', e => { e.preventDefault(); navigateTo(n.dataset.target); }); });
+    document.querySelectorAll('.sidebar-nav li').forEach(n => { n.addEventListener('click', () => navigateTo(n.dataset.target)); });
+}
+
+// ========== INIT ==========
+function init() {
+    renderAlerts(); renderRevenue(); renderSuppliers();
+    renderInventory(); renderRestock(); renderHistory();
+    setupNav(); setupSearch(); setupFilters(); setupTextInput();
+    setInterval(updateTime, 60000);
+    setInterval(() => { revenue.today += Math.floor(Math.random()*80); renderRevenue(); }, 5000);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+// Globals
+window.navigateTo = navigateTo;
+window.analyzeStore = analyzeStore;
+window.handleAction = handleAction;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openDeleteModal = openDeleteModal;
+window.closeDeleteModal = closeDeleteModal;
+window.confirmDelete = confirmDelete;
+window.removePendingItem = removePendingItem;
+window.toggleRecording = toggleRecording;
+window.stopAndCloseRecording = stopAndCloseRecording;
+window.submitTextForProcessing = submitTextForProcessing;
+window.goBackToStep1 = goBackToStep1;
+window.confirmStock = confirmStock;
+window.exportInventory = exportInventory;
+window.exportHistory = exportHistory;
+</script>
+</body>
+</html>
